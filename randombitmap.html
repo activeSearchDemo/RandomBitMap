@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Randomness page!</title>
+  <script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", fetchRandom, false);
+  function fetchRandom(){
+    var numberOfIntsRequested=1000;
+    var randomUrl = "https://www.random.org/integers/?num="+numberOfIntsRequested+"&min="+1+"&max="+255+"&col=10000&base=10&format=plain&rnd=new";
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", randomUrl, true);
+    xmlHttp.addEventListener("load", ajaxCallback, false);
+    xmlHttp.send(null);
+  }
+  //calls parses the data spit out by the fetcher, and sets the corresponding values in HTML
+  function ajaxCallback(event){
+    var data = event.target.responseText;
+    //uses regex to parse list of random integers
+    var arrayOfStrings = data.match(/\d+/g).map(Number);
+    var arrayOfInts = new Array();
+    var round = Math.round;
+    for(var i=0;i<arrayOfStrings.length;i++){
+      arrayOfStrings[i]= round(arrayOfStrings[i]);
+    }
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+    var myimage = ctx.createImageData(128, 128);
+    myimage.getPixel=function(x,y){
+    var i=(x+y*this.width)*4;
+    return {R:this.data[i],
+            G:this.data[i+1],
+            B:this.data[i+2],
+            A:this.data[i+3]}
+   }
+   myimage.setPixel=function(x,y,c){
+    var i=(x+y*this.width)*4;
+    this.data[i]=c.R;
+    this.data[i+1]=c.G;
+    this.data[i+2]=c.B;
+    this.data[i+3]=c.A;
+   }
+   var counter = 0;
+   for(var i=0;i<128;i++){
+     for(var j=0;j<128;j++){
+       myimage.setPixel(i,j,{
+         //Uses Math.random() to select the random integer to incorporate,
+         //this is becuase Random.org only provides up to 10,000 of the 128^2=16384 integers I need for a complete bitmap
+                  R: arrayOfStrings[Math.floor(Math.random()*1000)],
+                  G: arrayOfStrings[Math.floor(Math.random()*1000)],
+                  B: arrayOfStrings[Math.floor(Math.random()*1000)],
+                  A:255});
+     }
+   }
+    ctx.putImageData(myimage,0,0);
+  }
+  </script>
+
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+</body>
+</html>
